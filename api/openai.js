@@ -26,27 +26,25 @@ module.exports = async (req, res) => {
         }
 
         let endpoint = proxyBaseUrl;
-        const isAnthropic = endpoint.includes('anthropic.com');
-
-        if (isAnthropic) {
-            endpoint = `${endpoint.replace(/\/$/, '')}/v1/messages`;
-        } else {
-            endpoint = endpoint.replace(/\/v1$/, '') + '/v1/chat/completions';
-        }
-
         const headers = {
             "Content-Type": "application/json"
         };
 
-        if (isAnthropic) {
+        // 智能判断 Header 格式
+        const isAnthropicDirect = endpoint.includes('anthropic.com');
+        const isAnthropicKey = apiKey.startsWith('sk-ant-');
+
+        if (isAnthropicDirect || (isAnthropicKey && !endpoint.includes('openrouter.ai'))) {
             headers["x-api-key"] = apiKey;
             headers["anthropic-version"] = "2023-06-01";
+            endpoint = `${endpoint.replace(/\/$/, '')}/v1/messages`;
         } else {
             headers["Authorization"] = `Bearer ${apiKey}`;
+            endpoint = endpoint.replace(/\/v1$/, '') + '/v1/chat/completions';
         }
 
         let body;
-        if (isAnthropic) {
+        if (isAnthropicDirect) {
             body = JSON.stringify({
                 model: model || requestModel,
                 max_tokens: 1024,
@@ -58,6 +56,7 @@ module.exports = async (req, res) => {
             body = JSON.stringify({
                 model: model || requestModel,
                 messages: messages,
+                max_tokens: 1024,
                 stream: stream || false
             });
         }

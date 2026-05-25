@@ -153,28 +153,33 @@ async function getAIReply(message) {
             "Content-Type": "application/json"
         };
 
-        if (isAnthropic) {
+        // 智能判断 Header 格式
+        const isAnthropicDirect = endpoint.includes('anthropic.com');
+        const isAnthropicKey = apiKey.startsWith('sk-ant-');
+        
+        if (isAnthropicDirect || (isAnthropicKey && !endpoint.includes('openrouter.ai'))) {
             headers["x-api-key"] = apiKey;
             headers["anthropic-version"] = "2023-06-01";
         } else {
             headers["Authorization"] = `Bearer ${apiKey}`;
         }
 
+        const systemPrompt = "你是一个真实的人类伴侣，正在微信上聊天。回复要极其自然、口语化，字数精简，不要带任何括号动作描写。";
         let body;
-        if (isAnthropic) {
+        if (isAnthropicDirect) {
             body = JSON.stringify({
                 model: requestModel,
                 max_tokens: 1024,
+                system: systemPrompt,
                 messages: [
                     { role: "user", content: message }
-                ],
-                system: "你是一个真实的人类伴侣，正在微信上聊天。回复要极其自然、口语化，字数精简，不要带任何括号动作描写。"
+                ]
             });
         } else {
             body = JSON.stringify({
                 model: requestModel,
                 messages: [
-                    { role: "system", content: "你是一个真实的人类伴侣，正在微信上聊天。回复要极其自然、口语化，字数精简，不要带任何括号动作描写。" },
+                    { role: "system", content: systemPrompt },
                     { role: "user", content: message }
                 ],
                 max_tokens: 1024
@@ -298,7 +303,12 @@ ${userInfo}${userCallInfo}
             "Content-Type": "application/json"
         };
 
-        if (isAnthropic) {
+        // 智能判断 Header 格式
+        // 智能判断 Header 格式
+        const isAnthropicDirect = endpoint.includes('anthropic.com');
+        const isAnthropicKey = apiKey.startsWith('sk-ant-');
+
+        if (isAnthropicDirect || (isAnthropicKey && !endpoint.includes('openrouter.ai'))) {
             headers["x-api-key"] = apiKey;
             headers["anthropic-version"] = "2023-06-01";
         } else {
@@ -306,7 +316,7 @@ ${userInfo}${userCallInfo}
         }
 
         let body;
-        if (isAnthropic) {
+        if (isAnthropicDirect) {
             body = JSON.stringify({
                 model: requestModel,
                 max_tokens: 1024,
@@ -320,7 +330,7 @@ ${userInfo}${userCallInfo}
                     { role: "system", content: systemPrompt },
                     ...finalMessages
                 ],
-                max_tokens: 1024 // 增加 max_tokens 支持
+                max_tokens: 1024
             });
         }
 

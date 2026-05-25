@@ -90,15 +90,25 @@ ${userInfo}${userCallInfo}
             "Content-Type": "application/json"
         };
 
-        if (isAnthropic) {
+        // 智能判断 Header 格式
+        // 1. 如果是直接调用 Anthropic 官方接口
+        // 2. 或者 Key 是以 sk-ant- 开头的
+        const isAnthropicDirect = endpoint.includes('anthropic.com');
+        const isAnthropicKey = apiKey.startsWith('sk-ant-');
+        
+        if (isAnthropicDirect || (isAnthropicKey && !endpoint.includes('openrouter.ai'))) {
             headers["x-api-key"] = apiKey;
             headers["anthropic-version"] = "2023-06-01";
+            console.log(`[API] Using Anthropic header format for endpoint: ${endpoint}`);
         } else {
             headers["Authorization"] = `Bearer ${apiKey}`;
+            // 某些代理在请求 Claude 模型时仍需要 OpenAI 格式，这是最通用的
+            console.log(`[API] Using Bearer header format for endpoint: ${endpoint}`);
         }
 
         let body;
-        if (isAnthropic) {
+        // 只有在直接调用 Anthropic 官方接口时才使用其特有的 body 格式
+        if (isAnthropicDirect) {
             body = JSON.stringify({
                 model: requestModel,
                 max_tokens: 1024,
@@ -112,7 +122,7 @@ ${userInfo}${userCallInfo}
                     { role: "system", content: systemPrompt },
                     ...finalMessages
                 ],
-                max_tokens: 1024 // 增加 max_tokens 支持
+                max_tokens: 1024
             });
         }
 
