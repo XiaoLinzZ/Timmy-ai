@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/v1/chat/completions",
+      "destination": "/api/openai.js"
+    },
+    {
+      "source": "/api/mail",
+      "destination": "/api/mail.js"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/vote.html"
+    }
+  ]
+}
